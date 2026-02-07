@@ -1,0 +1,15 @@
+# Project exclude paths
+/.gradle/
+/app/build/
+/app/build/classes/kotlin/main/
+/build-logic/.gradle/
+/build-logic/build/
+/build-logic/build/classes/kotlin/main/
+/chat/build/
+/chat/build/classes/kotlin/main/
+/common/build/
+/common/build/classes/kotlin/main/
+/notification/build/
+/notification/build/classes/kotlin/main/
+/user/build/
+/user/build/classes/kotlin/main/
