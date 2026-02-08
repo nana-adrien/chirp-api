@@ -1,4 +1,33 @@
-package empire.digiprem.chirp.controller
+package empire.digiprem.chirp.api.controller
 
-class AuthController {
+import empire.digiprem.chirp.api.dto.AuthenticatedUserDto
+import empire.digiprem.chirp.api.dto.UserDto
+import empire.digiprem.chirp.api.dto.mappers.toAuthenticatedUserDto
+import empire.digiprem.chirp.api.dto.mappers.toUserDto
+import empire.digiprem.chirp.api.dto.request.LoginRequest
+import empire.digiprem.chirp.api.dto.request.RegisterRequest
+import empire.digiprem.chirp.service.auth.AuthService
+import jakarta.validation.Valid
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+
+@RestController
+@RequestMapping("/api/auth")
+class AuthController(private val authService: AuthService) {
+
+    @PostMapping("/register")
+    fun register(
+      @Valid @RequestBody  body: RegisterRequest
+    ): UserDto{
+       return authService.register(body.email, body.username, body.password).toUserDto()
+    }
+
+    @PostMapping("/login")
+    fun login(
+        @RequestBody body : LoginRequest
+    ): AuthenticatedUserDto{
+        return authService.login(body.email,body.password).toAuthenticatedUserDto()
+    }
 }

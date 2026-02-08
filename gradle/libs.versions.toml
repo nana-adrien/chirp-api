@@ -64,7 +64,7 @@ okhttp-loggin={module="com.squareup.okhttp3:logging-interceptor",version.ref="ok
 firebase-admin-sdk={module="com.google.firebase:firebase-admin",version.ref="firebase"}
 
 #Test
-spring-boot-start-test={module="org.springframework.boot:spring-boot-starter=test"}
+spring-boot-start-test={module="org.springframework.boot:spring-boot-starter-test"}
 kotlin-test-junit5={module="org.jetbrains.kotlin:kotlin-test-junit5"}
 spring-rabbit-test={module="org.springframework.amqp:spring-rabbit-test"}
 spring-restdocs-mockmvc={module="org.springframework.restdocs:spring-restdocs-mockmvc"}

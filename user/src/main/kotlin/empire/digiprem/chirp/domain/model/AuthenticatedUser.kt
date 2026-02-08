@@ -1,4 +1,4 @@
-package empire.digiprem.empire.digiprem.user.domain.model
+package empire.digiprem.chirp.domain.model
 
 data class AuthenticatedUser(
     val user: User,

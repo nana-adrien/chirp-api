@@ -1,4 +1,4 @@
-package empire.digiprem.chirp.security
+package empire.digiprem.chirp.infra.security
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component

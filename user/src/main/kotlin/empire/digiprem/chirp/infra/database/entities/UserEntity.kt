@@ -1,6 +1,6 @@
-package empire.digiprem.empire.digiprem.user.infra.database.entities
+package empire.digiprem.chirp.infra.database.entities
 
-import empire.digiprem.empire.digiprem.user.domain.model.UserId
+import empire.digiprem.chirp.domain.model.UserId
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -22,18 +22,18 @@ import java.time.Instant
     ]
 )
 
-class UserEntity {
+class UserEntity(
     @Id
-   @GeneratedValue(strategy = GenerationType.UUID) var id: UserId?=null
+   @GeneratedValue(strategy = GenerationType.UUID) var id: UserId?=null,
     @Column(nullable = false, unique = true)
-    var email: String?=null
+    var email: String,
     @Column(nullable = false, unique = true)
-    var username: String?=null
+    var username: String,
     @Column(nullable = false, unique = true)
-    var hashedPassword:String?=null
-    var hasVerifiedEmail:Boolean=false
+    var hashedPassword:String,
+    var hasVerifiedEmail:Boolean=false,
     @CreationTimestamp
-    var createdAt:Instant= Instant.now()
+    var createdAt:Instant= Instant.now(),
     @UpdateTimestamp
-    var updatedAt:Instant=Instant.now()
-}
+    var updatedAt:Instant=Instant.now(),
+)

@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+
+jwt:
+  expiration-minutes: 15
