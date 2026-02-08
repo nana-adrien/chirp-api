@@ -13,6 +13,8 @@ import empire.digiprem.chirp.infra.database.mappers.toUser
 import empire.digiprem.chirp.infra.database.repositories.RefreshTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.UserRepository
 import empire.digiprem.chirp.infra.security.PasswordEncoder
+import jakarta.transaction.Transactional
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
 import java.time.Instant
@@ -67,6 +69,47 @@ class AuthService(
 
 
     }
+
+
+    @Transactional
+    fun refresh(refreshToken:String): AuthenticatedUser{
+        if (!jWTService.validateRefreshToken(refreshToken)){
+            throw InvalidTokenException(
+                message = "Invalid refresh token",
+            )
+        }
+
+        val userId=jWTService.getUserIdFromToken(refreshToken)
+        val user=userRepository.findByIdOrNull(userId)
+            ?: throw UserNotFoundException()
+
+        val hashed=hashedToken(refreshToken)
+
+        return user.id?.let { userId->
+            refreshTokenRepository.findByUserIdAndHashedToken(
+                userId=userId,
+                hashedToken=hashed)?:throw InvalidTokenException(message = "Invalid refresh token",)
+
+            refreshTokenRepository.deleteByUserIdAndHashedToken(
+                userId=userId,
+                hashedToken=hashed
+            )
+            val newAccessToken=jWTService.generateAccessToken(userId)
+            val newRefreshToken=jWTService.generateRefreshToken(userId)
+
+            storeRefreshToken(userId,newRefreshToken)
+
+            AuthenticatedUser(
+                user=user.toUser(),
+                accessToken = newAccessToken,
+                refreshToken=newRefreshToken
+            )
+
+        }?:throw UserNotFoundException()
+
+    }
+
+
 
 
     private fun storeRefreshToken(userId: UserId, token: String){
