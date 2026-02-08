@@ -40,3 +40,5 @@ shirp:
   email:
     verification:
       expiry-hours: 24
+    reset-password:
+      expiry-minutes: 30

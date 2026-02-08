@@ -3,6 +3,7 @@ package empire.digiprem.chirp.api.exception
 import empire.digiprem.chirp.domain.exception.EmailNotVerifiedException
 import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
+import empire.digiprem.chirp.domain.exception.SamePasswordException
 import empire.digiprem.chirp.domain.exception.UserAlreadyExistsException
 import empire.digiprem.chirp.domain.exception.UserNotFoundException
 import org.springframework.http.HttpStatus
@@ -23,6 +24,12 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    @ExceptionHandler(SamePasswordException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onInValidToken(e: SamePasswordException)=mapOf(
+        "code" to "SAME_PASSWORD",
+        "message" to e.message
+    )
     @ExceptionHandler(InvalidCredentialsException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onInValidToken(e: InvalidCredentialsException)=mapOf(

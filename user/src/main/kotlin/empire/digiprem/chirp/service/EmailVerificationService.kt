@@ -1,4 +1,4 @@
-package empire.digiprem.chirp.service.auth
+package empire.digiprem.chirp.service
 
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.UserNotFoundException
@@ -24,20 +24,11 @@ class EmailVerificationService(
     @Transactional
     fun createVerificationToken(email: String) : EmailVerificationToken {
         val userEntity=userRepository.findByEmail(email)?:throw UserNotFoundException()
-
-        val existingTokens=emailVerificationTokenRepository.findByUserAndUsedAtIsNull(
+        emailVerificationTokenRepository.invalidateActiveTokensForUser(
             userEntity
         )
-
-        val now=Instant.now()
-        val usedTokens=existingTokens.map{
-            it.apply {
-                this.usedAt=now
-            }
-        }
-        emailVerificationTokenRepository.saveAll(usedTokens)
         val token= EmailVerificationTokenEntity(
-            expiresAt = now.plus(expiryHours, ChronoUnit.HOURS),
+            expiresAt = Instant.now().plus(expiryHours, ChronoUnit.HOURS),
             user=userEntity
         )
         return emailVerificationTokenRepository.save(token).toEmailVerificationToken()
@@ -49,7 +40,7 @@ class EmailVerificationService(
             ?:throw InvalidTokenException("Email verification token is invalid")
 
         if (verificationToken.isUsed){
-            throw InvalidTokenException("Emial verification token is already used")
+            throw InvalidTokenException("Email verification token is already used")
         }
 
         if (verificationToken.isExpired) {

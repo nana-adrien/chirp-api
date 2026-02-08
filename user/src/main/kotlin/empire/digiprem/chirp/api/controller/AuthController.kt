@@ -4,12 +4,16 @@ import empire.digiprem.chirp.api.dto.AuthenticatedUserDto
 import empire.digiprem.chirp.api.dto.UserDto
 import empire.digiprem.chirp.api.dto.mappers.toAuthenticatedUserDto
 import empire.digiprem.chirp.api.dto.mappers.toUserDto
+import empire.digiprem.chirp.api.dto.request.ChangePasswordRequest
+import empire.digiprem.chirp.api.dto.request.EmailRequest
 import empire.digiprem.chirp.api.dto.request.LoginRequest
 import empire.digiprem.chirp.api.dto.request.RefreshTokenRequest
 import empire.digiprem.chirp.api.dto.request.RegisterRequest
+import empire.digiprem.chirp.api.dto.request.ResetPasswordRequest
 import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
-import empire.digiprem.chirp.service.auth.AuthService
-import empire.digiprem.chirp.service.auth.EmailVerificationService
+import empire.digiprem.chirp.service.AuthService
+import empire.digiprem.chirp.service.EmailVerificationService
+import empire.digiprem.chirp.service.PasswordResetService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -22,8 +26,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/auth")
 class AuthController(
     private val authService: AuthService,
-    private val emailVerificationTokenRepository: EmailVerificationTokenRepository,
-    private val emailVerificationService: EmailVerificationService
+    private val emailVerificationService: EmailVerificationService,
+    private val passwordResetService: PasswordResetService
 ) {
 
     @PostMapping("/register")
@@ -59,5 +63,31 @@ class AuthController(
     ){
         emailVerificationService.verifyEmail(token)
     }
+
+    @PostMapping("/forgot-password")
+    fun forgotPassword(
+        @Valid @RequestBody body: EmailRequest
+    ){
+        passwordResetService.requestPasswordReset(body.email)
+    }
+
+    @PostMapping("/reset-password")
+    fun resetPassword(
+       @Valid @RequestBody body: ResetPasswordRequest
+    ){
+        passwordResetService.resetPassword(
+          token = body.token,
+           newPassword = body.newPassword)
+
+    }
+
+    @PostMapping("/change-password")
+    fun changePassword(
+       @Valid @RequestBody body: ChangePasswordRequest
+    ){
+       //TODO : Extract request user ID and call service
+
+    }
+
 
 }
