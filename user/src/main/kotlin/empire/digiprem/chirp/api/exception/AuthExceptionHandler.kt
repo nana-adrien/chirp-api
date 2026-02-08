@@ -1,9 +1,10 @@
 package empire.digiprem.chirp.api.exception
 
-import empire.digiprem.chirp.exception.InvalidCredentialsException
-import empire.digiprem.chirp.exception.InvalidTokenException
-import empire.digiprem.chirp.exception.UserAlreadyExistsException
-import empire.digiprem.chirp.exception.UserNotFoundException
+import empire.digiprem.chirp.domain.exception.EmailNotVerifiedException
+import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
+import empire.digiprem.chirp.domain.exception.InvalidTokenException
+import empire.digiprem.chirp.domain.exception.UserAlreadyExistsException
+import empire.digiprem.chirp.domain.exception.UserNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -26,6 +27,12 @@ class AuthExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onInValidToken(e: InvalidCredentialsException)=mapOf(
         "code" to "INVALID_CREDENTIAL",
+        "message" to e.message
+    )
+    @ExceptionHandler(EmailNotVerifiedException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onInValidToken(e: EmailNotVerifiedException)=mapOf(
+        "code" to "EMAIL_NOT_VERIFIED",
         "message" to e.message
     )
 

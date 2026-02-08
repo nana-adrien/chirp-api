@@ -1,7 +1,7 @@
 package empire.digiprem.chirp.service.auth
 
 import empire.digiprem.chirp.domain.model.UserId
-import empire.digiprem.chirp.exception.InvalidTokenException
+import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service
 import java.util.Date
 import java.util.UUID
 import kotlin.io.encoding.Base64
-import kotlin.uuid.Uuid
 
 @Service
 class JWTService(

@@ -1,12 +1,13 @@
 package empire.digiprem.chirp.service.auth
 
+import empire.digiprem.chirp.domain.exception.EmailNotVerifiedException
 import empire.digiprem.chirp.domain.model.AuthenticatedUser
 import empire.digiprem.chirp.domain.model.User
 import empire.digiprem.chirp.domain.model.UserId
-import empire.digiprem.chirp.exception.InvalidCredentialsException
-import empire.digiprem.chirp.exception.InvalidTokenException
-import empire.digiprem.chirp.exception.UserAlreadyExistsException
-import empire.digiprem.chirp.exception.UserNotFoundException
+import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
+import empire.digiprem.chirp.domain.exception.InvalidTokenException
+import empire.digiprem.chirp.domain.exception.UserAlreadyExistsException
+import empire.digiprem.chirp.domain.exception.UserNotFoundException
 import empire.digiprem.chirp.infra.database.entities.RefreshTokenEntity
 import empire.digiprem.chirp.infra.database.entities.UserEntity
 import empire.digiprem.chirp.infra.database.mappers.toUser
@@ -25,24 +26,28 @@ class AuthService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jWTService: JWTService,
-    private val refreshTokenRepository: RefreshTokenRepository
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val emailVerificationService: EmailVerificationService
 ) {
 
 
+    @Transactional
     fun register(email:String, username: String, password: String): User {
-        val user = userRepository.findByEmailOrUsername(email.trim(),username.trim())
+        val trimEmail=email.trim()
+        val user = userRepository.findByEmailOrUsername(trimEmail,username.trim())
         if (user!=null){
             throw UserAlreadyExistsException()
         }
 
         val savedUser=userRepository.save(
             UserEntity(
-                email=email,
+                email=trimEmail,
                 username=username,
                 hashedPassword = passwordEncoder.encode(password)!!
             )
         ).toUser()
 
+        emailVerificationService.createVerificationToken(trimEmail)
         return savedUser
     }
 
@@ -51,6 +56,10 @@ class AuthService(
 
         if (!passwordEncoder.matches(password,user.hashedPassword)){
             throw InvalidCredentialsException()
+        }
+
+        if (!user.hasVerifiedEmail){
+            throw EmailNotVerifiedException()
         }
 
         return user.id?.let { userId->
