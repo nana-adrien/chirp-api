@@ -46,7 +46,6 @@ class AuthService(
         return savedUser
     }
 
-
     fun login(email:String,password: String): AuthenticatedUser {
         val user=userRepository.findByEmail(email.trim())?:throw InvalidCredentialsException()
 
@@ -69,7 +68,6 @@ class AuthService(
 
 
     }
-
 
     @Transactional
     fun refresh(refreshToken:String): AuthenticatedUser{
@@ -109,8 +107,12 @@ class AuthService(
 
     }
 
-
-
+    @Transactional
+    fun logout(refreshToken: String){
+        val userId= jWTService.getUserIdFromToken(refreshToken)
+        val hashed=hashedToken(refreshToken)
+        refreshTokenRepository.deleteByUserIdAndHashedToken(userId,hashed)
+    }
 
     private fun storeRefreshToken(userId: UserId, token: String){
         val hashed=hashedToken(token)
