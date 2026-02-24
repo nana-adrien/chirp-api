@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.data.redis)
     implementation(libs.jwt.api)
     implementation(libs.jwt.impl)
     implementation(libs.jwt.jackson)

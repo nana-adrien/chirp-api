@@ -3,6 +3,7 @@ package empire.digiprem.chirp.api.exception
 import empire.digiprem.chirp.domain.exception.EmailNotVerifiedException
 import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
+import empire.digiprem.chirp.domain.exception.RateLimitException
 import empire.digiprem.chirp.domain.exception.SamePasswordException
 import empire.digiprem.chirp.domain.exception.UserAlreadyExistsException
 import empire.digiprem.chirp.domain.exception.UserNotFoundException
@@ -17,6 +18,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 class AuthExceptionHandler {
 
+    @ExceptionHandler(RateLimitException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onInValidToken(e: RateLimitException)=mapOf(
+        "code" to "RATE_LIMIT_EXCEEDED",
+        "message" to e.message
+    )
     @ExceptionHandler(InvalidTokenException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onInValidToken(e: InvalidTokenException)=mapOf(

@@ -10,6 +10,7 @@ import empire.digiprem.chirp.api.dto.request.LoginRequest
 import empire.digiprem.chirp.api.dto.request.RefreshTokenRequest
 import empire.digiprem.chirp.api.dto.request.RegisterRequest
 import empire.digiprem.chirp.api.dto.request.ResetPasswordRequest
+import empire.digiprem.chirp.infra.EmailRateLimiter
 import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
 import empire.digiprem.chirp.service.AuthService
 import empire.digiprem.chirp.service.EmailVerificationService
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController
 class AuthController(
     private val authService: AuthService,
     private val emailVerificationService: EmailVerificationService,
+    private  val emailRateLimiter: EmailRateLimiter,
     private val passwordResetService: PasswordResetService
 ) {
 
@@ -64,6 +66,16 @@ class AuthController(
         emailVerificationService.verifyEmail(token)
     }
 
+    @PostMapping("/resend-verification")
+    fun resendVerification(
+        @Valid @RequestBody body: EmailRequest
+    ){
+        emailRateLimiter.withRateLimit(
+            email = body.email
+        ){
+            emailVerificationService.resendVerificationEmail(body.email)
+        }
+    }
     @PostMapping("/forgot-password")
     fun forgotPassword(
         @Valid @RequestBody body: EmailRequest
