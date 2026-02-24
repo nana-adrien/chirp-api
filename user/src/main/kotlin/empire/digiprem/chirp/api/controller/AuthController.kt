@@ -10,7 +10,7 @@ import empire.digiprem.chirp.api.dto.request.LoginRequest
 import empire.digiprem.chirp.api.dto.request.RefreshTokenRequest
 import empire.digiprem.chirp.api.dto.request.RegisterRequest
 import empire.digiprem.chirp.api.dto.request.ResetPasswordRequest
-import empire.digiprem.chirp.infra.EmailRateLimiter
+import empire.digiprem.chirp.infra.rate_limiting.EmailRateLimiter
 import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
 import empire.digiprem.chirp.service.AuthService
 import empire.digiprem.chirp.service.EmailVerificationService

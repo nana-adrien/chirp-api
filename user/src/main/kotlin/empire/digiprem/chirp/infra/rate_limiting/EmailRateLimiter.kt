@@ -1,13 +1,11 @@
-package empire.digiprem.chirp.infra
+package empire.digiprem.chirp.infra.rate_limiting
 
 import empire.digiprem.chirp.domain.exception.RateLimitException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.core.script.DefaultRedisScript
 import org.springframework.stereotype.Component
-import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 class EmailRateLimiter(
