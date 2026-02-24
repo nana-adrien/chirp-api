@@ -10,8 +10,10 @@ import empire.digiprem.chirp.api.dto.request.LoginRequest
 import empire.digiprem.chirp.api.dto.request.RefreshTokenRequest
 import empire.digiprem.chirp.api.dto.request.RegisterRequest
 import empire.digiprem.chirp.api.dto.request.ResetPasswordRequest
+import empire.digiprem.chirp.infra.config.IpRateLimit
 import empire.digiprem.chirp.infra.rate_limiting.EmailRateLimiter
 import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
+import empire.digiprem.chirp.infra.rate_limiting.IpRateLimiter
 import empire.digiprem.chirp.service.AuthService
 import empire.digiprem.chirp.service.EmailVerificationService
 import empire.digiprem.chirp.service.PasswordResetService
@@ -22,17 +24,26 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.util.concurrent.TimeUnit
 
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
     private val authService: AuthService,
     private val emailVerificationService: EmailVerificationService,
+    private val passwordResetService: PasswordResetService,
     private  val emailRateLimiter: EmailRateLimiter,
-    private val passwordResetService: PasswordResetService
+    private  val ipRateLimiter: IpRateLimiter,
 ) {
 
+
+
     @PostMapping("/register")
+    @IpRateLimit(
+        request = 10,
+        duration = 1L,
+        unit = TimeUnit.HOURS
+    )
     fun register(
       @Valid @RequestBody  body: RegisterRequest
     ): UserDto{
@@ -40,6 +51,11 @@ class AuthController(
     }
 
     @PostMapping("/login")
+    @IpRateLimit(
+        request = 10,
+        duration = 1L,
+        unit = TimeUnit.HOURS
+    )
     fun login(
         @RequestBody body : LoginRequest
     ): AuthenticatedUserDto{

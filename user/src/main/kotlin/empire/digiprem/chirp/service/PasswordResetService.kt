@@ -23,7 +23,7 @@ import java.time.temporal.ChronoUnit
 class PasswordResetService(
     private val passwordResetRepository: PasswordResetTokenRepository,
     private val passwordEncoder: PasswordEncoder,
-    @param:Value("\${shirp.email.reset-password.expiry-minutes}")
+    @param:Value("\${chirp.email.reset-password.expiry-minutes}")
     private val expiryminutes: Long,
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository
