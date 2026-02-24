@@ -4,7 +4,7 @@ import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.SamePasswordException
 import empire.digiprem.chirp.domain.exception.UserNotFoundException
-import empire.digiprem.chirp.domain.model.UserId
+import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.infra.database.entities.PasswordResetTokenEntity
 import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.PasswordResetTokenRepository

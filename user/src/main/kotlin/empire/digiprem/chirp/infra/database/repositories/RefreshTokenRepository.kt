@@ -1,6 +1,6 @@
 package empire.digiprem.chirp.infra.database.repositories
 
-import empire.digiprem.chirp.domain.model.UserId
+import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.infra.database.entities.RefreshTokenEntity
 import org.springframework.data.jpa.repository.JpaRepository
 

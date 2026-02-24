@@ -3,7 +3,7 @@ package empire.digiprem.chirp.service
 import empire.digiprem.chirp.domain.exception.EmailNotVerifiedException
 import empire.digiprem.chirp.domain.model.AuthenticatedUser
 import empire.digiprem.chirp.domain.model.User
-import empire.digiprem.chirp.domain.model.UserId
+import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.UserAlreadyExistsException

@@ -1,8 +1,7 @@
 package empire.digiprem.chirp.domain.model
 
-import java.util.UUID
+import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
 
-typealias UserId = UUID
 
 data class User(
     val id: UserId,

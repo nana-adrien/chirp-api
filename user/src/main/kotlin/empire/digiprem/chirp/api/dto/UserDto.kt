@@ -1,6 +1,6 @@
 package empire.digiprem.chirp.api.dto
 
-import empire.digiprem.chirp.domain.model.UserId
+import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
 
 data class UserDto(
     val id: UserId,

@@ -45,7 +45,7 @@ spring:
     host: "raccoon.lmq.cloudamqp.com"
     port: 8883
     password: "${RABBITMQ_PASSWORD}"
-    username: "yosaeagd:yosaeagd"
+    username: "yosaeagd"-
     ssl:
       enabled: true
     virtual-host: "yosaeagd"
