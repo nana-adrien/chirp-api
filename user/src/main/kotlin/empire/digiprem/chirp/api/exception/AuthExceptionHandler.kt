@@ -5,6 +5,7 @@ import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.RateLimitException
 import empire.digiprem.chirp.domain.exception.SamePasswordException
+import empire.digiprem.chirp.domain.exception.UnauthorizedException
 import empire.digiprem.chirp.domain.exception.UserAlreadyExistsException
 import empire.digiprem.chirp.domain.exception.UserNotFoundException
 import org.springframework.http.HttpStatus
@@ -18,6 +19,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 class AuthExceptionHandler {
 
+    @ExceptionHandler(UnauthorizedException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onInValidToken(e: UnauthorizedException)=mapOf(
+        "code" to "UNAUTHORIZED",
+        "message" to e.message
+    )
     @ExceptionHandler(RateLimitException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onInValidToken(e: RateLimitException)=mapOf(
