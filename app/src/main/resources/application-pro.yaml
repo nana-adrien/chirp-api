@@ -14,6 +14,8 @@ nginx:
   require-proxy: true
 
 chirp:
+  email:
+    url: "https://pl_coding.com"
   rate-limiting:
     ip:
       apply-limit: true

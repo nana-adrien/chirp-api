@@ -15,7 +15,7 @@ import empire.digiprem.chirp.infra.database.repositories.RefreshTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.UserRepository
 import empire.digiprem.chirp.infra.message_queue.EventPublisher
 import empire.digiprem.chirp.infra.security.PasswordEncoder
-import empire.digiprem.empire.digiprem.chirp.domain.events.user.UserEvent
+import empire.digiprem.chirp.domain.events.user.UserEvent
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service

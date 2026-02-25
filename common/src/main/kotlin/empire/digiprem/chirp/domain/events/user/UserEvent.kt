@@ -1,8 +1,9 @@
-package empire.digiprem.empire.digiprem.chirp.domain.events.user
+package empire.digiprem.chirp.domain.events.user
 
 import empire.digiprem.chirp.domain.ChirpEvent
 import empire.digiprem.chirp.domain.events.user.UserEventConstants
 import empire.digiprem.chirp.domain.type.UserId
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
@@ -38,7 +39,8 @@ sealed class UserEvent (
         val userId: UserId,
         val email: String,
         val username: String,
-        val verificationToken: String,
+        val passwordResetToken: String,
+        val expiresInMinute: Long,
         override val eventKey: String= UserEventConstants.USER_REQUEST_RESET_PASSWORD
     ): UserEvent(), ChirpEvent
 

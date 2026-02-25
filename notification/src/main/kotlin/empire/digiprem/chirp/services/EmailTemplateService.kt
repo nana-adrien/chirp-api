@@ -1,4 +1,4 @@
-package empire.digiprem.empire.digiprem.chirp.services
+package empire.digiprem.chirp.services
 
 import org.springframework.stereotype.Service
 import org.thymeleaf.TemplateEngine

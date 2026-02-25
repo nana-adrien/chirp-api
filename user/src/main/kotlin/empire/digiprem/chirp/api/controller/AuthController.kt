@@ -35,8 +35,6 @@ class AuthController(
     private val emailRateLimiter: EmailRateLimiter,
     private val ipRateLimiter: IpRateLimiter,
 ) {
-
-
     @PostMapping("/register")
     @IpRateLimit(
         request = 10,

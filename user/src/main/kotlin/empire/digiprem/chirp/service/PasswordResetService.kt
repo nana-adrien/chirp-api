@@ -1,5 +1,6 @@
 package empire.digiprem.chirp.service
 
+import empire.digiprem.chirp.domain.events.user.UserEvent
 import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.SamePasswordException
@@ -9,6 +10,7 @@ import empire.digiprem.chirp.infra.database.entities.PasswordResetTokenEntity
 import empire.digiprem.chirp.infra.database.repositories.PasswordResetTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.RefreshTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.UserRepository
+import empire.digiprem.chirp.infra.message_queue.EventPublisher
 import empire.digiprem.chirp.infra.security.PasswordEncoder
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
@@ -25,9 +27,10 @@ class PasswordResetService(
     @param:Value("\${chirp.email.reset-password.expiry-minutes}")
     private val expiryminutes: Long,
     private val userRepository: UserRepository,
-    private val refreshTokenRepository: RefreshTokenRepository
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val eventPublisher: EventPublisher,
 
-) {
+    ) {
 
     @Transactional
     fun requestPasswordReset(email: String) {
@@ -43,6 +46,15 @@ class PasswordResetService(
 
         //TODO: Inform notification service about password reset trigger to send email
 
+        eventPublisher.publish(
+            event= UserEvent.RequestResetPassword(
+                userId = user.id!!,
+                email = user.email,
+                username = user.username,
+                passwordResetToken = token.token,
+                expiresInMinute = expiryminutes,
+            )
+        )
     }
 
     @Transactional

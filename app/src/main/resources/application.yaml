@@ -53,11 +53,11 @@ spring:
 
   rabbitmq:
     host: "raccoon.lmq.cloudamqp.com"
-    port: 8883
+    port: 5672
     password: "${RABBITMQ_PASSWORD}"
     username: "yosaeagd"
     ssl:
-      enabled: true
+      enabled: false
     virtual-host: "yosaeagd"
     listener:
       simple:
@@ -80,6 +80,7 @@ jwt:
 
 chirp:
   email:
+    from: "empire.digipre@gmail.com"
     verification:
       expiry-hours: 24
     reset-password:

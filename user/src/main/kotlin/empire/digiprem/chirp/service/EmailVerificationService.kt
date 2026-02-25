@@ -7,7 +7,7 @@ import empire.digiprem.chirp.infra.database.entities.EmailVerificationTokenEntit
 import empire.digiprem.chirp.infra.database.mappers.toEmailVerificationToken
 import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.UserRepository
-import empire.digiprem.empire.digiprem.chirp.domain.events.user.UserEvent
+import empire.digiprem.chirp.domain.events.user.UserEvent
 import empire.digiprem.chirp.infra.message_queue.EventPublisher
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value

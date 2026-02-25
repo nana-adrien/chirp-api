@@ -4,6 +4,7 @@ package empire.digiprem.chirp.infra.message_queue
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import empire.digiprem.chirp.domain.ChirpEvent
 import empire.digiprem.chirp.domain.events.user.UserEventConstants
@@ -26,6 +27,7 @@ class RabbitMqConfig {
 
         val objectMapper = ObjectMapper().apply {
             registerModule(KotlinModule.Builder().build())
+            registerModule(JavaTimeModule())
             findAndRegisterModules()
             val polymorphicModule = BasicPolymorphicTypeValidator.builder()
                 .allowIfBaseType(ChirpEvent::class.java)
