@@ -7,12 +7,12 @@ import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.rabbitmq.client.AMQP
-import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.impl.AMQImpl
 import empire.digiprem.empire.digiprem.chirp.domain.ChirpEvent
 import empire.digiprem.empire.digiprem.chirp.domain.events.user.UserEventConstants
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.core.TopicExchange
+import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.amqp.support.converter.JacksonJavaTypeMapper
