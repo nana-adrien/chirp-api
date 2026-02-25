@@ -11,16 +11,13 @@ import empire.digiprem.chirp.api.dto.request.RefreshTokenRequest
 import empire.digiprem.chirp.api.dto.request.RegisterRequest
 import empire.digiprem.chirp.api.dto.request.ResetPasswordRequest
 import empire.digiprem.chirp.api.util.requestUserId
-import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.infra.config.IpRateLimit
 import empire.digiprem.chirp.infra.rate_limiting.EmailRateLimiter
-import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
 import empire.digiprem.chirp.infra.rate_limiting.IpRateLimiter
 import empire.digiprem.chirp.service.AuthService
 import empire.digiprem.chirp.service.EmailVerificationService
 import empire.digiprem.chirp.service.PasswordResetService
 import jakarta.validation.Valid
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody

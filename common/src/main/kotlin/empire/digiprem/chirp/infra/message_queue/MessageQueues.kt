@@ -1,4 +1,4 @@
-package empire.digiprem.empire.digiprem.chirp.infra.message_queue
+package empire.digiprem.chirp.infra.message_queue
 
 object MessageQueues {
 

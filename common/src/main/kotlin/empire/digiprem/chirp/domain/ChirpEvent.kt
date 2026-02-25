@@ -1,4 +1,4 @@
-package empire.digiprem.empire.digiprem.chirp.domain
+package empire.digiprem.chirp.domain
 
 import java.time.Instant
 

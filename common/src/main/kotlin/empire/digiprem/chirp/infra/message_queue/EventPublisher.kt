@@ -1,6 +1,6 @@
-package empire.digiprem.empire.digiprem.chirp.infra.message_queue
+package empire.digiprem.chirp.infra.message_queue
 
-import empire.digiprem.empire.digiprem.chirp.domain.ChirpEvent
+import empire.digiprem.chirp.domain.ChirpEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate

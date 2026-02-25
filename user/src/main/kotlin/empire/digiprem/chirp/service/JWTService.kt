@@ -1,6 +1,6 @@
 package empire.digiprem.chirp.service
 
-import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
+import empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts

@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component
 
 @Configuration
 @ConfigurationProperties(prefix = "nginx")
-class NginxConfig(
-    val trustedIps:List<String> = emptyList(),
-    val requireProxy:Boolean = true,
+ class NginxConfig(
+    var trustedIps:List<String> = emptyList(),
+    var requireProxy:Boolean = true,
 
 ) {
 }

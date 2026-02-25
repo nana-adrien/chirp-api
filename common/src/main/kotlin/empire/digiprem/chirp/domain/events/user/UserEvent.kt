@@ -1,8 +1,8 @@
 package empire.digiprem.empire.digiprem.chirp.domain.events.user
 
-import empire.digiprem.empire.digiprem.chirp.domain.ChirpEvent
-import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
-import java.security.Key
+import empire.digiprem.chirp.domain.ChirpEvent
+import empire.digiprem.chirp.domain.events.user.UserEventConstants
+import empire.digiprem.chirp.domain.type.UserId
 import java.time.Instant
 import java.util.UUID
 

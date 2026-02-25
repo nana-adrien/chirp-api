@@ -1,4 +1,4 @@
-package empire.digiprem.empire.digiprem.chirp.domain.type
+package empire.digiprem.chirp.domain.type
 
 
 import java.util.UUID

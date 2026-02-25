@@ -1,4 +1,4 @@
-package empire.digiprem.empire.digiprem.chirp.domain.events.user
+package empire.digiprem.chirp.domain.events.user
 
 object UserEventConstants {
     const val USER_EXCHANGE = "user.events"

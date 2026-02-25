@@ -3,7 +3,7 @@ package empire.digiprem.chirp.service
 import empire.digiprem.chirp.domain.exception.EmailNotVerifiedException
 import empire.digiprem.chirp.domain.model.AuthenticatedUser
 import empire.digiprem.chirp.domain.model.User
-import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
+import empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.UserAlreadyExistsException
@@ -13,9 +13,9 @@ import empire.digiprem.chirp.infra.database.entities.UserEntity
 import empire.digiprem.chirp.infra.database.mappers.toUser
 import empire.digiprem.chirp.infra.database.repositories.RefreshTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.UserRepository
+import empire.digiprem.chirp.infra.message_queue.EventPublisher
 import empire.digiprem.chirp.infra.security.PasswordEncoder
 import empire.digiprem.empire.digiprem.chirp.domain.events.user.UserEvent
-import empire.digiprem.empire.digiprem.chirp.infra.message_queue.EventPublisher
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service

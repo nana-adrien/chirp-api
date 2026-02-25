@@ -15,11 +15,11 @@ class JwtAuthFilter (
     private val jwtService: JWTService
 ): OncePerRequestFilter() {
     override fun doFilterInternal(
-        request: HttpServletRequest?,
-        response: HttpServletResponse?,
-        filterChain: FilterChain?
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        filterChain: FilterChain
     ) {
-        val authHeader=request?.getHeader(HttpHeaders.AUTHORIZATION)
+        val authHeader=request.getHeader(HttpHeaders.AUTHORIZATION)
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             if (jwtService.validateAccessToken(authHeader)) {
                 val userId=jwtService.getUserIdFromToken(authHeader)

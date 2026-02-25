@@ -1,6 +1,6 @@
 package empire.digiprem.chirp.infra.database.entities
 
-import empire.digiprem.empire.digiprem.chirp.domain.type.UserId
+import empire.digiprem.chirp.domain.type.UserId
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
