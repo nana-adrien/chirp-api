@@ -1,4 +1,4 @@
-package empire.digipre.chirp.domain.model
+package empire.digiprem.chirp.domain.models
 
 import empire.digiprem.chirp.domain.type.ChatId
 import java.time.Instant

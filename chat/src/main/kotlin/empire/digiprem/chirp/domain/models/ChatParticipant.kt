@@ -1,7 +1,6 @@
-package empire.digipre.chirp.domain.model
+package empire.digiprem.chirp.domain.models
 
 import empire.digiprem.chirp.domain.type.UserId
-import org.apache.catalina.User
 
 data class ChatParticipant(
     val user: UserId,
