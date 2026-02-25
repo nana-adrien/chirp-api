@@ -7,8 +7,11 @@ import empire.digiprem.chirp.infra.database.entities.EmailVerificationTokenEntit
 import empire.digiprem.chirp.infra.database.mappers.toEmailVerificationToken
 import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.UserRepository
+import empire.digiprem.empire.digiprem.chirp.domain.events.user.UserEvent
+import empire.digiprem.empire.digiprem.chirp.infra.message_queue.EventPublisher
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -18,7 +21,8 @@ import java.time.temporal.ChronoUnit
 class EmailVerificationService(
     private val emailVerificationTokenRepository: EmailVerificationTokenRepository,
     private val userRepository: UserRepository,
-    @param:Value("\${chirp.email.verification.expiry-hours}") private val expiryHours: Long
+    @param:Value("\${chirp.email.verification.expiry-hours}") private val expiryHours: Long,
+    private val eventPublisher: EventPublisher,
 ) {
 
     @Transactional
@@ -34,8 +38,21 @@ class EmailVerificationService(
         return emailVerificationTokenRepository.save(token).toEmailVerificationToken()
     }
 
+    @Transactional
     fun resendVerificationEmail(email:String){
+        val token=createVerificationToken(email)
+        if (token.user.hasVerifiedEmail){
+            return
+        }
 
+        eventPublisher.publish(
+            UserEvent.RequestResendVerification(
+                userId = token.user.id,
+                email = token.user.email,
+                username = token.user.username,
+                verificationToken = token.token
+            )
+        )
 
     }
     @Transactional

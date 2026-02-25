@@ -14,6 +14,8 @@ import empire.digiprem.chirp.infra.database.mappers.toUser
 import empire.digiprem.chirp.infra.database.repositories.RefreshTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.UserRepository
 import empire.digiprem.chirp.infra.security.PasswordEncoder
+import empire.digiprem.empire.digiprem.chirp.domain.events.user.UserEvent
+import empire.digiprem.empire.digiprem.chirp.infra.message_queue.EventPublisher
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -27,7 +29,8 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
     private val jWTService: JWTService,
     private val refreshTokenRepository: RefreshTokenRepository,
-    private val emailVerificationService: EmailVerificationService
+    private val emailVerificationService: EmailVerificationService,
+    private val eventPublisher: EventPublisher,
 ) {
 
 
@@ -47,7 +50,15 @@ class AuthService(
             )
         ).toUser()
 
-        emailVerificationService.createVerificationToken(trimEmail)
+       val token= emailVerificationService.createVerificationToken(trimEmail)
+        eventPublisher.publish(
+            UserEvent.Created(
+                userId = savedUser.id,
+                email = savedUser.email,
+                username = savedUser.username,
+                verificationToken = token.token
+            )
+        )
         return savedUser
     }
 
