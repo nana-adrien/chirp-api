@@ -2,6 +2,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  mail:
+    host: smtp.mailgun.org
+    username: chirp@sandbox9c631478e492462da118b1adfbc80b26.mailgun.org
 
 
 jwt:

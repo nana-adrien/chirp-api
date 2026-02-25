@@ -41,6 +41,16 @@ spring:
         format_sql: true
         show_sql: true
 
+  mail:
+    port: 587
+    password: ${MAILGUN_PASSWORD}
+    properties:
+      mail:
+        SMTP:
+          auth: true
+          STARTTLS:
+            enable: true
+
   rabbitmq:
     host: "raccoon.lmq.cloudamqp.com"
     port: 8883
