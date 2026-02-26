@@ -2,6 +2,7 @@ package empire.digiprem.chirp.service
 
 import empire.digiprem.chirp.api.dto.ChatMessageDto
 import empire.digiprem.chirp.api.mappers.toChatMessageDto
+import empire.digiprem.chirp.domain.event.ChatParticipantLeftEvent
 import empire.digiprem.chirp.domain.exception.ChatNotFoundException
 import empire.digiprem.chirp.domain.exception.ChatParticipantNotFoundException
 import empire.digiprem.chirp.domain.exception.InvalidChatSizeException
@@ -17,6 +18,7 @@ import empire.digiprem.chirp.infra.database.repositories.ChatMessageRepository
 import empire.digiprem.chirp.infra.database.repositories.ChatParticipantRepository
 import empire.digiprem.chirp.infra.database.repositories.ChatRepository
 import jakarta.transaction.Transactional
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -26,7 +28,8 @@ import java.time.Instant
 class ChatService(
     private val chatRepository: ChatRepository,
     private val chatParticipantRepository: ChatParticipantRepository,
-    private val chatMessageRepository: ChatMessageRepository
+    private val chatMessageRepository: ChatMessageRepository,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) {
 
 
@@ -103,6 +106,7 @@ class ChatService(
             }
         ).toChat(lastMessage)
 
+
         return updateChat
     }
 
@@ -122,6 +126,19 @@ class ChatService(
             chatRepository.deleteById(chatId)
             return
         }
+
+        chatRepository.save(
+            chat.apply {
+                this.participants = chat.participants-participant
+            }
+        )
+
+        applicationEventPublisher.publishEvent(
+            ChatParticipantLeftEvent(
+                chatId = chatId,
+                userId = userId
+            )
+        )
     }
 
     private fun lastMessage(chatId: ChatId): ChatMessage? {
