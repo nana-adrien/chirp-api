@@ -7,6 +7,7 @@ import empire.digiprem.chirp.domain.models.ChatMessage
 import empire.digiprem.chirp.domain.models.ChatParticipant
 import empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.infra.database.entities.ChatParticipantEntity
+import empire.digiprem.chirp.infra.database.mappers.toChat
 import empire.digiprem.chirp.infra.database.repositories.ChatParticipantRepository
 import empire.digiprem.chirp.infra.database.repositories.ChatRepository
 import empire.digiprem.empire.digiprem.chirp.infra.database.entities.ChatEntity

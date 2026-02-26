@@ -22,8 +22,8 @@ fun ChatEntity.toChat(lastMessage: ChatMessage?=null): Chat {
 
 fun ChatParticipantEntity.toParticipant(): ChatParticipant {
     return ChatParticipant(
-        user = userId,
-        userName = username,
+        userId = userId,
+        username = username,
         email = email,
         profilePictureUrl = profilePictureUrl
     )

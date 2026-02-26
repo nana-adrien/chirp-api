@@ -5,7 +5,7 @@ import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.RateLimitException
 import empire.digiprem.chirp.domain.exception.SamePasswordException
-import empire.digiprem.chirp.domain.exception.UnauthorizedException
+import empire.digiprem.empire.digiprem.chirp.exception.UnauthorizedException
 import empire.digiprem.chirp.domain.exception.UserAlreadyExistsException
 import empire.digiprem.chirp.domain.exception.UserNotFoundException
 import org.springframework.http.HttpStatus

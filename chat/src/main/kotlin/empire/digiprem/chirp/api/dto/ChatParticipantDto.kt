@@ -1,10 +1,10 @@
-package empire.digiprem.chirp.domain.models
+package empire.digiprem.chirp.api.dto
 
 import empire.digiprem.chirp.domain.type.UserId
 
-data class ChatParticipant(
+data class ChatParticipantDto(
     val userId: UserId,
     val username: String,
     val email: String,
-    val profilePictureUrl: String?,
+    val profilePictureUrl: String?
 )
