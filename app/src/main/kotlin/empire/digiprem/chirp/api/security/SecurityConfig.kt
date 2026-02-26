@@ -1,4 +1,4 @@
-package empire.digiprem.chirp.security
+package empire.digiprem.chirp.api.security
 
 import empire.digiprem.chirp.api.config.JwtAuthFilter
 import jakarta.servlet.DispatcherType

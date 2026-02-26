@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.notification)
     implementation(projects.chat)
     implementation(projects.common)
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.amqp)

@@ -17,6 +17,7 @@ import empire.digiprem.chirp.infra.database.repositories.ChatParticipantReposito
 import empire.digiprem.chirp.infra.database.repositories.ChatRepository
 import empire.digiprem.chirp.infra.message_queue.EventPublisher
 import jakarta.transaction.Transactional
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -31,6 +32,11 @@ class ChatMessageService(
 ) {
 
 
+    @Transactional
+    @CacheEvict(
+        value = ["messages"],
+        key = "#chatId",
+    )
     fun sendMessage(
         chatId: ChatId,
         senderId: UserId,
@@ -67,10 +73,14 @@ class ChatMessageService(
 
 
     @Transactional
+    @CacheEvict(
+        value = ["messages"],
+        key = "#result.chatId",
+    )
     fun  deleteMessage(
         messageId: ChatMessageId,
         requestUserId:UserId,
-    ){
+    ) {
         val message=chatMessageRepository.findByIdOrNull(messageId)
             ?:throw MessageNotFoundException(messageId)
 
@@ -86,6 +96,17 @@ class ChatMessageService(
                 messageId = message.id!!
             )
         )
+        evictMessagesCache(chatId = message.chatId)
+
+
+    }
+
+    @CacheEvict(
+        value = ["messages"],
+        key = "#chatId",
+    )
+    fun evictMessagesCache(chatId: ChatId) {
+
     }
 }
 

@@ -18,6 +18,7 @@ import empire.digiprem.chirp.infra.database.repositories.ChatMessageRepository
 import empire.digiprem.chirp.infra.database.repositories.ChatParticipantRepository
 import empire.digiprem.chirp.infra.database.repositories.ChatRepository
 import jakarta.transaction.Transactional
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
@@ -33,7 +34,12 @@ class ChatService(
 ) {
 
 
-    @Transactional
+    @Cacheable(
+        value = ["messages"],
+        key = "#chatId",
+        condition = "#before==null && #pageSize<=50",
+        sync = true
+    )
     fun getChatMessages(
         chatId: ChatId,
         before: Instant?=null,
