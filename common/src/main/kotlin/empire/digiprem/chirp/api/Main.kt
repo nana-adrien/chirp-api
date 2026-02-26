@@ -1,4 +1,4 @@
-package empire.digiprem.empire.digiprem.chirp.domain.events
+package empire.digiprem.chirp.api
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.

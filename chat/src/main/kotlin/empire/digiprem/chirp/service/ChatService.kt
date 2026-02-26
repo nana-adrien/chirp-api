@@ -1,5 +1,7 @@
 package empire.digiprem.chirp.service
 
+import empire.digiprem.chirp.api.dto.ChatMessageDto
+import empire.digiprem.chirp.api.mappers.toChatMessageDto
 import empire.digiprem.chirp.domain.exception.ChatNotFoundException
 import empire.digiprem.chirp.domain.exception.ChatParticipantNotFoundException
 import empire.digiprem.chirp.domain.exception.InvalidChatSizeException
@@ -15,8 +17,10 @@ import empire.digiprem.chirp.infra.database.repositories.ChatMessageRepository
 import empire.digiprem.chirp.infra.database.repositories.ChatParticipantRepository
 import empire.digiprem.chirp.infra.database.repositories.ChatRepository
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import java.time.Instant
 
 @Service
 class ChatService(
@@ -24,6 +28,26 @@ class ChatService(
     private val chatParticipantRepository: ChatParticipantRepository,
     private val chatMessageRepository: ChatMessageRepository
 ) {
+
+
+    @Transactional
+    fun getChatMessages(
+        chatId: ChatId,
+        before: Instant?=null,
+        pageSize:Int,
+    ):List<ChatMessageDto> {
+        return chatMessageRepository
+            .findByChatIdBefore(
+                chatId=chatId,
+                before=before?:Instant.now(),
+                pegeable= PageRequest.of(0,pageSize)
+            )
+            .content
+            .asReversed()
+            .map { it.toChatMessage().toChatMessageDto() }
+    }
+
+
 
     @Transactional
     fun createChat(
