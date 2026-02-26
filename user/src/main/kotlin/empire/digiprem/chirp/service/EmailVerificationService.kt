@@ -1,5 +1,6 @@
 package empire.digiprem.chirp.service
 
+import empire.digiprem.chirp.domain.events.user.UserEvent
 import empire.digiprem.chirp.domain.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.UserNotFoundException
 import empire.digiprem.chirp.domain.model.EmailVerificationToken
@@ -7,11 +8,9 @@ import empire.digiprem.chirp.infra.database.entities.EmailVerificationTokenEntit
 import empire.digiprem.chirp.infra.database.mappers.toEmailVerificationToken
 import empire.digiprem.chirp.infra.database.repositories.EmailVerificationTokenRepository
 import empire.digiprem.chirp.infra.database.repositories.UserRepository
-import empire.digiprem.chirp.domain.events.user.UserEvent
 import empire.digiprem.chirp.infra.message_queue.EventPublisher
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -77,6 +76,14 @@ class EmailVerificationService(
             verificationToken.user.apply {
                 this.hasVerifiedEmail=true
             }
+        )
+
+        eventPublisher.publish(
+            event=UserEvent.Verified(
+                userId = verificationToken.user.id!!,
+                email = verificationToken.user.email,
+                username = verificationToken.user.username,
+            )
         )
 
     }

@@ -1,11 +1,7 @@
 package empire.digiprem.chirp.infra.database.entities
 
 import empire.digiprem.chirp.domain.type.UserId
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.Index
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
 
@@ -15,10 +11,10 @@ import java.time.Instant
     schema = "chat_service",
     indexes = [
         Index(
-            name = "idx_chat_participant_username,",
+            name = "idx_chat_participant_username",
             columnList = "username"),
         Index(
-            name = "idx_chat_participant_email,",
+            name = "idx_chat_participant_email",
             columnList = "email"),
     ]
 )

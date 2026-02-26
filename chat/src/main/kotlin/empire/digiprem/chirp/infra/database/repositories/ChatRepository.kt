@@ -2,7 +2,7 @@ package empire.digiprem.chirp.infra.database.repositories
 
 import empire.digiprem.chirp.domain.type.ChatId
 import empire.digiprem.chirp.domain.type.UserId
-import empire.digiprem.empire.digiprem.chirp.infra.database.entities.ChatEntity
+import empire.digiprem.chirp.infra.database.entities.ChatEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 

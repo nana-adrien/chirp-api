@@ -1,18 +1,7 @@
-package empire.digiprem.empire.digiprem.chirp.infra.database.entities
+package empire.digiprem.chirp.infra.database.entities
 
 import empire.digiprem.chirp.domain.type.ChatId
-import empire.digiprem.chirp.infra.database.entities.ChatParticipantEntity
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Index
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
 

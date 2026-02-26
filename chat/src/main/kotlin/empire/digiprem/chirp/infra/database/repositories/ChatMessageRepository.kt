@@ -2,8 +2,7 @@ package empire.digiprem.chirp.infra.database.repositories
 
 import empire.digiprem.chirp.domain.type.ChatId
 import empire.digiprem.chirp.domain.type.ChatMessageId
-import empire.digiprem.empire.digiprem.chirp.infra.database.entities.ChatMessageEntity
-import jakarta.persistence.Entity
+import empire.digiprem.chirp.infra.database.entities.ChatMessageEntity
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository

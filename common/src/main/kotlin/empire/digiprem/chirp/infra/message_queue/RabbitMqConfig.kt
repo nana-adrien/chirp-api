@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import empire.digiprem.chirp.domain.ChirpEvent
 import empire.digiprem.chirp.domain.events.user.UserEventConstants
+import empire.digiprem.empire.digiprem.chirp.domain.events.chat.ChatEventConstants
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.Queue
@@ -16,6 +17,7 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.support.converter.Jackson2JavaTypeMapper
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -61,6 +63,19 @@ class RabbitMqConfig {
     )
 
     @Bean
+    fun chatExchange()= TopicExchange(
+        ChatEventConstants.CHAT_EXCHANGE,
+        true,
+        false
+    )
+
+    @Bean
+    fun chatUserEventsQueue()= Queue(
+        MessageQueues.CHAT_USER_EVENTS,
+        true
+    )
+
+    @Bean
     fun notificationUserEventsQueue()= Queue(
         MessageQueues.NOTIFICATION_USER_EVENTS,
         true
@@ -68,11 +83,21 @@ class RabbitMqConfig {
 
     @Bean
     fun notificationUserEventsBinding(
-        notificationEventQueue: Queue,
+         notificationUserEventsQueue: Queue,
         userExchange: TopicExchange
     ): Binding {
         return BindingBuilder
-            .bind(notificationUserEventsQueue())
+            .bind(notificationUserEventsQueue)
+            .to(userExchange)
+            .with("user.*")
+    }
+    @Bean
+    fun chatUserEventsBinding(
+         chatUserEventsQueue: Queue,
+        userExchange: TopicExchange
+    ): Binding {
+        return BindingBuilder
+            .bind(chatUserEventsQueue)
             .to(userExchange)
             .with("user.*")
     }

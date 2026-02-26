@@ -1,21 +1,11 @@
-package empire.digiprem.empire.digiprem.chirp.infra.database.entities
+package empire.digiprem.chirp.infra.database.entities
 
-import empire.digiprem.chirp.domain.models.ChatParticipant
 import empire.digiprem.chirp.domain.type.ChatId
 import empire.digiprem.chirp.domain.type.ChatMessageId
-import empire.digiprem.chirp.infra.database.entities.ChatParticipantEntity
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Index
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
-import org.springframework.data.annotation.CreatedDate
+import org.hibernate.annotations.OnDelete
+import org.hibernate.annotations.OnDeleteAction
 import java.time.Instant
 
 @Entity
@@ -35,7 +25,7 @@ class ChatMessageEntity (
     var id: ChatMessageId?=null,
     @Column(nullable = false)
     var content: String,
-    @JoinColumn(
+    @Column(
         name = "chat_id",
         nullable = false,
         insertable = false,
@@ -49,6 +39,7 @@ class ChatMessageEntity (
         insertable = false,
         updatable = false,
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     var chat: ChatEntity?=null,
 
     @ManyToOne(fetch = FetchType.LAZY)
