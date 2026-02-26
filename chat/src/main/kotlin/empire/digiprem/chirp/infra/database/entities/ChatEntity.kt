@@ -56,5 +56,5 @@ class ChatEntity(
         ])
     var participants: Set<ChatParticipantEntity> = emptySet(),
     @CreationTimestamp
-    var creatAt: Instant = Instant.now(),
+    var createdAt: Instant = Instant.now(),
 )
