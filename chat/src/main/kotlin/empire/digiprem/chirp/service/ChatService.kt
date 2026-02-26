@@ -42,20 +42,51 @@ class ChatService(
     )
     fun getChatMessages(
         chatId: ChatId,
-        before: Instant?=null,
-        pageSize:Int,
-    ):List<ChatMessageDto> {
+        before: Instant? = null,
+        pageSize: Int,
+    ): List<ChatMessageDto> {
         return chatMessageRepository
             .findByChatIdBefore(
-                chatId=chatId,
-                before=before?:Instant.now(),
-                pegeable= PageRequest.of(0,pageSize)
+                chatId = chatId,
+                before = before ?: Instant.now(),
+                pegeable = PageRequest.of(0, pageSize)
             )
             .content
             .asReversed()
             .map { it.toChatMessage().toChatMessageDto() }
     }
 
+
+    fun getChatById(
+        chatId: ChatId,
+        requestUserId: UserId
+    )
+            : Chat? {
+        return chatRepository.findChatById(
+            id = chatId,
+            userId = requestUserId
+        )?.toChat()
+    }
+
+    @Transactional
+    fun findChatsByUser(userId: UserId): List<Chat> {
+        val chatEntities = chatRepository.findAllByUserId(userId)
+        val chatIds = chatEntities.mapNotNull { it.id }
+        if (chatIds.isEmpty()) throw ChatNotFoundException()
+        val latestMessages = chatMessageRepository
+            .findLatestMessagesByChatId(chatIds.toSet())
+            .associateBy { it.chatId }
+
+        return chatEntities
+            .map {
+                it.toChat(
+                    lastMessage = latestMessages[it.id]?.toChatMessage(),
+                )
+            }
+            .sortedByDescending {
+                it.lastActivityAt
+            }
+    }
 
 
     @Transactional
@@ -135,7 +166,7 @@ class ChatService(
 
         chatRepository.save(
             chat.apply {
-                this.participants = chat.participants-participant
+                this.participants = chat.participants - participant
             }
         )
 

@@ -11,7 +11,9 @@ import empire.digiprem.chirp.service.ChatMessageService
 import empire.digiprem.chirp.service.ChatService
 import jakarta.validation.Valid
 import org.springframework.beans.support.PagedListHolder.DEFAULT_PAGE_SIZE
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 
 @RestController
@@ -37,34 +39,54 @@ class ChatController(
         @PathVariable chatId: ChatId,
         @Valid @RequestBody body: AddParticipantToChatDto
 
-    ):ChatDto {
+    ): ChatDto {
         return chatService.addParticipantToChat(
-            requestUserId=requestUserId,
-            chatId=chatId,
-            userIds=body.userIds.toSet()
+            requestUserId = requestUserId,
+            chatId = chatId,
+            userIds = body.userIds.toSet()
         ).toChatDto()
     }
+
     @DeleteMapping("/{chatId}/leave")
     fun removeParticipantFromChat(
         @PathVariable chatId: ChatId,
     ) {
-         chatService.removeParticipantFromChat(
+        chatService.removeParticipantFromChat(
             userId = requestUserId,
-            chatId=chatId,
+            chatId = chatId,
         )
     }
 
+    @GetMapping("/{chatId}")
+    fun getChat(
+        @PathVariable chatId: ChatId,
+    ): ChatDto {
+        return chatService
+            .getChatById(
+                chatId = chatId,
+                requestUserId = requestUserId
+            )?.toChatDto()
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+    }
+
+    @GetMapping
+    fun getChatsForUser(): List<ChatDto> {
+        println("Ici le code passe bien ")
+        return chatService.findChatsByUser(
+            userId = requestUserId,
+        ).map { it.toChatDto() }
+    }
 
     @GetMapping("/{chatId}/messages")
     fun getMessagesForChat(
         @PathVariable chatId: ChatId,
-        @RequestParam ("before",required = false) before: Instant?=null,
-        @RequestParam ("pageSize") pageSize: Int=DEFAULT_PAGE_SIZE,
-    ):List<ChatMessageDto> {
+        @RequestParam("before", required = false) before: Instant? = null,
+        @RequestParam("pageSize") pageSize: Int = DEFAULT_PAGE_SIZE,
+    ): List<ChatMessageDto> {
         return chatService.getChatMessages(
-            chatId=chatId,
-            before=before,
-            pageSize=pageSize
+            chatId = chatId,
+            before = before,
+            pageSize = pageSize
         )
     }
 }
