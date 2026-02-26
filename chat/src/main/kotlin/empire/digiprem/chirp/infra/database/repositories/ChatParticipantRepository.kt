@@ -6,7 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
 interface ChatParticipantRepository : JpaRepository<ChatParticipantEntity, UserId>{
+
     fun findByUserIdIn(userIds: List<UserId>): Set<ChatParticipantEntity>
+
+    //Lower case the query to make it case-insensitive
     @Query(
         """
             SELECT P
