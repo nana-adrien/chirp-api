@@ -1,4 +1,4 @@
-package empire.digiprem.empire.digiprem.chirp.infra.database.repositories
+package empire.digiprem.chirp.infra.database.repositories
 
 import empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.infra.database.entities.ChatParticipantEntity
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query
 
 interface ChatParticipantRepository : JpaRepository<ChatParticipantEntity, UserId>{
 
-    fun findByUserIdIn(userIds: List<UserId>): Set<ChatParticipantEntity>
+    fun findByUserIdIn(userIds: Set<UserId>): Set<ChatParticipantEntity>
 
     //Lower case the query to make it case-insensitive
     @Query(

@@ -1,6 +1,5 @@
-package empire.digiprem.empire.digiprem.chirp.infra.database.repositories
+package empire.digiprem.chirp.infra.database.repositories
 
-import empire.digiprem.chirp.domain.models.Chat
 import empire.digiprem.chirp.domain.type.ChatId
 import empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.empire.digiprem.chirp.infra.database.entities.ChatEntity
