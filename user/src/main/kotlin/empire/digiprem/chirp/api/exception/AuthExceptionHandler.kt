@@ -2,7 +2,7 @@ package empire.digiprem.chirp.api.exception
 
 import empire.digiprem.chirp.domain.exception.EmailNotVerifiedException
 import empire.digiprem.chirp.domain.exception.InvalidCredentialsException
-import empire.digiprem.chirp.domain.exception.InvalidTokenException
+import empire.digiprem.chirp.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.RateLimitException
 import empire.digiprem.chirp.domain.exception.SamePasswordException
 import empire.digiprem.empire.digiprem.chirp.exception.UnauthorizedException

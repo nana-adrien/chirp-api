@@ -1,7 +1,7 @@
 package empire.digiprem.chirp.service
 
 import empire.digiprem.chirp.domain.events.user.UserEvent
-import empire.digiprem.chirp.domain.exception.InvalidTokenException
+import empire.digiprem.chirp.exception.InvalidTokenException
 import empire.digiprem.chirp.domain.exception.UserNotFoundException
 import empire.digiprem.chirp.domain.model.EmailVerificationToken
 import empire.digiprem.chirp.infra.database.entities.EmailVerificationTokenEntity

@@ -1,14 +1,13 @@
 package empire.digiprem.chirp.service
 
 import empire.digiprem.chirp.domain.type.UserId
-import empire.digiprem.chirp.domain.exception.InvalidTokenException
+import empire.digiprem.chirp.exception.InvalidTokenException
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.Date
-import java.util.UUID
+import java.util.*
 import kotlin.io.encoding.Base64
 
 @Service
@@ -17,7 +16,7 @@ class JWTService(
     @param:Value("\${jwt.expiration-minutes}") private val expirationMinutes: Long,
 ) {
 
-    private val secretKey= Keys.hmacShaKeyFor(Base64.decode(secretBase64))
+    private val secretKey= Keys.hmacShaKeyFor(Base64.Default.decode(secretBase64))
 
     private val accessTokenValidityMs=expirationMinutes * 60 *1000L
      val refreshTokenValidityMs=30 * 24 * 60 * 1000L
@@ -49,17 +48,17 @@ class JWTService(
         return tokenType == "refresh"
     }
 
-    fun  getUserIdFromToken(token: String): UserId{
+    fun  getUserIdFromToken(token: String): UserId {
         val claims=parseAllClaims(token) ?: throw InvalidTokenException(
             message = "The attached JWT token is not valid"
         )
         return UUID.fromString(claims.subject)
     }
 
-    private fun generateToken(userId: UserId,type:String,expiry: Long):String{
+    private fun generateToken(userId: UserId, type:String, expiry: Long):String{
         val now= Date()
 
-        val expiryDate=Date(now.time+expiry)
+        val expiryDate= Date(now.time + expiry)
 
         return Jwts.builder()
             .subject(userId.toString())
