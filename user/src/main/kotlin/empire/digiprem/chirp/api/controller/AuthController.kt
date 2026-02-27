@@ -4,12 +4,7 @@ import empire.digiprem.chirp.api.dto.AuthenticatedUserDto
 import empire.digiprem.chirp.api.dto.UserDto
 import empire.digiprem.chirp.api.dto.mappers.toAuthenticatedUserDto
 import empire.digiprem.chirp.api.dto.mappers.toUserDto
-import empire.digiprem.chirp.api.dto.request.ChangePasswordRequest
-import empire.digiprem.chirp.api.dto.request.EmailRequest
-import empire.digiprem.chirp.api.dto.request.LoginRequest
-import empire.digiprem.chirp.api.dto.request.RefreshTokenRequest
-import empire.digiprem.chirp.api.dto.request.RegisterRequest
-import empire.digiprem.chirp.api.dto.request.ResetPasswordRequest
+import empire.digiprem.chirp.api.dto.request.*
 import empire.digiprem.chirp.api.util.requestUserId
 import empire.digiprem.chirp.infra.config.IpRateLimit
 import empire.digiprem.chirp.infra.rate_limiting.EmailRateLimiter
@@ -18,12 +13,7 @@ import empire.digiprem.chirp.service.AuthService
 import empire.digiprem.chirp.service.EmailVerificationService
 import empire.digiprem.chirp.service.PasswordResetService
 import jakarta.validation.Valid
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.util.concurrent.TimeUnit
 
 @RestController

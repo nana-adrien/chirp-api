@@ -292,6 +292,37 @@ class ChatWebSocketHandler(
         logger.info("Connexion WebSocket établie pour l'user $userId")
     }
 
+    override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+        connectionLockRead.write {
+            sessions.remove(session.id )?.let {userSession ->
+                val userId=userSession.userId
+
+                userToSessions.compute(userId){_,sessions->
+                    sessions
+                        ?.apply { remove(session.id) }
+                        ?.takeIf { it.isNotEmpty() }
+                }
+
+                userChatIds[userId]?.forEach { chatId ->
+                    chatToSessions.compute(userId){_,sessions->
+                        sessions
+                            ?.apply { remove(session.id) }
+                            ?.takeIf { it.isNotEmpty() }
+                    }
+
+                }
+
+                logger.info("Websocket session closed for user $userId")
+            }
+        }
+    }
+
+
+    override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
+        logger.error("Transport error for session ${session.id}", exception)
+        session.close(CloseStatus.SERVER_ERROR.withReason("Transport error"))
+    }
+
     // ÉTAPE 2 : QUAND LE SERVEUR REÇOIT UN MESSAGE DE L'UTILISATEUR
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
         // On récupère l'identité de celui qui parle
@@ -437,7 +468,7 @@ class ChatWebSocketHandler(
 
     }
 
-    override fun handlePongMessage(session: WebSocketSession, message: PongMessage?) {
+    override fun handlePongMessage(session: WebSocketSession, message: PongMessage) {
         connectionLockRead.write {
             sessions.compute(session.id) { _, userSession ->
                 userSession?.copy(
@@ -446,48 +477,46 @@ class ChatWebSocketHandler(
             }
             logger.debug("Received pong from ${session.id}")
         }
+    }
 
+    @Scheduled(fixedDelay = PING_INTERVAL_MS)
+    fun pingClients() {
+        val currentTime = System.currentTimeMillis()
+        val sessionsToClose = mutableListOf<String>()
 
-        @Scheduled(fixedDelay = PING_INTERVAL_MS)
-        fun pingClients() {
-            val currentTime = System.currentTimeMillis()
-            val sessionsToClose = mutableListOf<String>()
+        val sessionsSnapshot = connectionLockRead.read { sessions.toMap() }
 
-            val sessionsSnapshot = connectionLockRead.read { sessions.toMap() }
-
-            sessionsSnapshot.forEach { (sessionId, userSession) ->
-                try {
-                    if (userSession.session.isOpen) {
-                        val lastPong = userSession.lastPongTimestamp
-                        if (currentTime - lastPong > PONG_TIMEOUT_MS) {
-                            logger.warn("Session $sessionId has timed out, closing connection.")
-                            sessionsToClose.add(sessionId)
-                            return@forEach
-                        }
-
-                        userSession.session.sendMessage(PingMessage())
-                        logger.debug("Send ping to {}", userSession.userId)
+        sessionsSnapshot.forEach { (sessionId, userSession) ->
+            try {
+                if (userSession.session.isOpen) {
+                    val lastPong = userSession.lastPongTimestamp
+                    if (currentTime - lastPong > PONG_TIMEOUT_MS) {
+                        logger.warn("Session $sessionId has timed out, closing connection.")
+                        sessionsToClose.add(sessionId)
+                        return@forEach
                     }
-                } catch (e: Exception) {
-                    logger.error("Could not ping session $sessionId", e)
-                    sessionsToClose.add(sessionId)
-                }
-            }
 
-            sessionsToClose.forEach { sessionId ->
-                connectionLockRead.read {
-                    sessions[sessionId]?.session?.let { session ->
-                        try {
-                            session.close(CloseStatus.GOING_AWAY.withReason("Ping timeout"))
-                        }catch (e: Exception) {
-                            logger.error("Could not close sessions  for session ${session.id}")
-                        }
+                    userSession.session.sendMessage(PingMessage())
+                    logger.debug("Send ping to {}", userSession.userId)
+                }
+            } catch (e: Exception) {
+                logger.error("Could not ping session $sessionId", e)
+                sessionsToClose.add(sessionId)
+            }
+        }
+
+        sessionsToClose.forEach { sessionId ->
+            connectionLockRead.read {
+                sessions[sessionId]?.session?.let { session ->
+                    try {
+                        session.close(CloseStatus.GOING_AWAY.withReason("Ping timeout"))
+                    }catch (e: Exception) {
+                        logger.error("Could not close sessions  for session ${session.id}")
                     }
                 }
             }
         }
     }
-
 
     // Petit outil pour renvoyer une erreur au client en cas de problème
     private fun sendError(session: WebSocketSession, error: ErrorDto) {

@@ -71,7 +71,6 @@ class ChatController(
 
     @GetMapping
     fun getChatsForUser(): List<ChatDto> {
-        println("Ici le code passe bien ")
         return chatService.findChatsByUser(
             userId = requestUserId,
         ).map { it.toChatDto() }

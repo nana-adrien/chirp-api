@@ -36,8 +36,6 @@ class ChatMessageEntity (
     @JoinColumn(
         name = "chat_id",
         nullable = false,
-        insertable = false,
-        updatable = false,
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
     var chat: ChatEntity?=null,
@@ -46,8 +44,6 @@ class ChatMessageEntity (
     @JoinColumn(
         name = "sender_id",
         nullable = false,
-        insertable = false,
-        updatable = false,
     )
     var sender: ChatParticipantEntity,
     @CreationTimestamp

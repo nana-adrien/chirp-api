@@ -133,7 +133,7 @@ class ChatService(
 
 
         val users = userIds.map { userId ->
-            chatParticipantRepository.findByIdOrNull(chatId)
+            chatParticipantRepository.findByIdOrNull(userId)
                 ?: throw ChatParticipantNotFoundException(userId)
         }
         val lastMessage = lastMessage(chatId)

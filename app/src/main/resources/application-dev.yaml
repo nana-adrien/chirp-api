@@ -19,3 +19,6 @@ chirp:
   rate-limiting:
     ip:
       apply-limit: false
+  web-socket:
+    allowed-origins:
+      - "http://localhost:8080"
