@@ -13,12 +13,11 @@ import empire.digiprem.chirp.service.ChatService
 import empire.digiprem.chirp.service.JWTService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
-import org.springframework.web.socket.CloseStatus
-import org.springframework.web.socket.TextMessage
-import org.springframework.web.socket.WebSocketSession
+import org.springframework.web.socket.*
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import tools.jackson.databind.ObjectMapper
 import java.util.concurrent.ConcurrentHashMap
@@ -226,6 +225,12 @@ class ChatWebSocketHandler(
     private val jWTService: JWTService,                 // Pour identifier l'user via son token
 ) : TextWebSocketHandler() { // TextWebSocketHandler = spécialisé dans l'envoi/réception de texte (JSON)
 
+    companion object {
+        private const val PING_INTERVAL_MS = 30_000L
+        private val PONG_TIMEOUT_MS = 30_000L
+    }
+
+
     private val logger = LoggerFactory.getLogger(javaClass)
 
     // Verrou pour éviter que deux fils (threads) ne modifient les listes en même temps
@@ -256,7 +261,10 @@ class ChatWebSocketHandler(
 
         // 2. On récupère le UserId via le Token
         val userId = jWTService.getUserIdFromToken(authHeader)
-        val userSession = UserSession(userId = userId, session = session)
+        val userSession = UserSession(
+            userId = userId,
+            session = session,
+        )
 
         // 3. MISE À JOUR DU REGISTRE (On verrouille l'écriture pour être tranquille)
         connectionLockRead.write {
@@ -429,6 +437,57 @@ class ChatWebSocketHandler(
 
     }
 
+    override fun handlePongMessage(session: WebSocketSession, message: PongMessage?) {
+        connectionLockRead.write {
+            sessions.compute(session.id) { _, userSession ->
+                userSession?.copy(
+                    lastPongTimestamp = System.currentTimeMillis(),
+                )
+            }
+            logger.debug("Received pong from ${session.id}")
+        }
+
+
+        @Scheduled(fixedDelay = PING_INTERVAL_MS)
+        fun pingClients() {
+            val currentTime = System.currentTimeMillis()
+            val sessionsToClose = mutableListOf<String>()
+
+            val sessionsSnapshot = connectionLockRead.read { sessions.toMap() }
+
+            sessionsSnapshot.forEach { (sessionId, userSession) ->
+                try {
+                    if (userSession.session.isOpen) {
+                        val lastPong = userSession.lastPongTimestamp
+                        if (currentTime - lastPong > PONG_TIMEOUT_MS) {
+                            logger.warn("Session $sessionId has timed out, closing connection.")
+                            sessionsToClose.add(sessionId)
+                            return@forEach
+                        }
+
+                        userSession.session.sendMessage(PingMessage())
+                        logger.debug("Send ping to {}", userSession.userId)
+                    }
+                } catch (e: Exception) {
+                    logger.error("Could not ping session $sessionId", e)
+                    sessionsToClose.add(sessionId)
+                }
+            }
+
+            sessionsToClose.forEach { sessionId ->
+                connectionLockRead.read {
+                    sessions[sessionId]?.session?.let { session ->
+                        try {
+                            session.close(CloseStatus.GOING_AWAY.withReason("Ping timeout"))
+                        }catch (e: Exception) {
+                            logger.error("Could not close sessions  for session ${session.id}")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     // Petit outil pour renvoyer une erreur au client en cas de problème
     private fun sendError(session: WebSocketSession, error: ErrorDto) {
@@ -437,5 +496,9 @@ class ChatWebSocketHandler(
     }
 
     // Structure interne pour stocker les infos d'une connexion
-    private data class UserSession(val userId: UserId, val session: WebSocketSession)
+    private data class UserSession(
+        val userId: UserId,
+        val session: WebSocketSession,
+        val lastPongTimestamp: Long = System.currentTimeMillis(),
+    )
 }
