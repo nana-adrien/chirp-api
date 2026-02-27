@@ -3,6 +3,9 @@ package empire.digiprem.chirp.api.websocket
 import com.fasterxml.jackson.databind.JsonMappingException
 import empire.digiprem.chirp.api.dto.ws.*
 import empire.digiprem.chirp.api.mappers.toChatMessageDto
+import empire.digiprem.chirp.domain.event.ChatParticipantJoinedEvent
+import empire.digiprem.chirp.domain.event.ChatParticipantLeftEvent
+import empire.digiprem.chirp.domain.event.MessageDeletedEvent
 import empire.digiprem.chirp.domain.type.ChatId
 import empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.service.ChatMessageService
@@ -11,6 +14,8 @@ import empire.digiprem.chirp.service.JWTService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
+import org.springframework.transaction.event.TransactionPhase
+import org.springframework.transaction.event.TransactionalEventListener
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
@@ -229,10 +234,13 @@ class ChatWebSocketHandler(
     // --- NOS REGISTRES (STOCKED EN RAM) ---
     // Associe un ID de session (ex: "abc-123") à une session complète
     private val sessions = ConcurrentHashMap<String, UserSession>()
+
     // Associe un User à ses sessions (un user peut avoir plusieurs téléphones connectés)
     private val userToSessions = ConcurrentHashMap<UserId, MutableSet<String>>()
+
     // Cache : Liste des IDs de chats auxquels appartient un utilisateur
     private val userChatIds = ConcurrentHashMap<UserId, MutableSet<ChatId>>()
+
     // La liste des sessions actives pour CHAQUE chat (Crucial pour le broadcast)
     private val chatToSessions = ConcurrentHashMap<ChatId, MutableSet<String>>()
 
@@ -353,6 +361,74 @@ class ChatWebSocketHandler(
             }
         }
     }
+
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    fun onDeleteMessage(event: MessageDeletedEvent) {
+        broadcastToChat(
+            chatId = event.chatId,
+            message = OutgoingWebSocketMessage(
+                type = OutgoingWebSocketMessageType.MESSAGE_DELETED,
+                payload = objectMapper.writeValueAsString(
+                    DeleteMessageDto(
+                        chatId = event.chatId,
+                        messageId = event.messageId
+                    )
+                )
+            )
+        )
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    fun onJoinChat(event: ChatParticipantJoinedEvent) {
+        connectionLockRead.write {
+            event.userIds.forEach { userId ->
+                userChatIds.compute(userId) { _, chatIds ->
+                    (chatIds ?: mutableSetOf()).apply { add(event.chatId) }
+                }
+                userToSessions[userId]?.forEach { sessionId ->
+                    chatToSessions.compute(event.chatId) { _, sessions ->
+                        (sessions ?: mutableSetOf()).apply { add(sessionId) }
+                    }
+                }
+            }
+        }
+
+        broadcastToChat(
+            chatId = event.chatId,
+            message = OutgoingWebSocketMessage(
+                type = OutgoingWebSocketMessageType.CHAT_PARTICIPANT_CHANGED,
+                payload = objectMapper.writeValueAsString(
+                    ChatParticipantsChangedDto(
+                        chatId = event.chatId
+                    )
+                )
+            )
+        )
+    }
+
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    fun onLeftChat(event: ChatParticipantLeftEvent) {
+        connectionLockRead.write {
+            userChatIds.compute(event.userId) { _, chatIds ->
+                chatIds
+                    ?.apply { remove(event.chatId) }
+                    ?.takeIf { it.isNotEmpty() }
+            }
+
+        }
+
+        userToSessions[event.userId]?.forEach { sessionId ->
+            chatToSessions.compute(event.chatId) { _, sessions ->
+                sessions
+                    ?.apply { remove(sessionId) }
+                    ?.takeIf { it.isNotEmpty() }
+            }
+        }
+
+    }
+
 
     // Petit outil pour renvoyer une erreur au client en cas de problème
     private fun sendError(session: WebSocketSession, error: ErrorDto) {
