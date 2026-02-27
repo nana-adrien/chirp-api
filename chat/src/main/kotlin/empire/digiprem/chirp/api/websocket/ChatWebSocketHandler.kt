@@ -1,6 +1,5 @@
 package empire.digiprem.chirp.api.websocket
 
-import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonMappingException
 import empire.digiprem.chirp.api.dto.ws.*
 import empire.digiprem.chirp.api.mappers.toChatMessageDto
@@ -22,13 +21,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
+/*
 @Component
 class ChatWebSocketHandler(
     private val chatMessageService: ChatMessageService,
     private val objectMapper: ObjectMapper,
     private val chatService: ChatService,
     private val jWTService: JWTService,
-) : TextWebSocketHandler() {
+) : TextWebSocketHandler()
+{
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private val connectionLock = ReentrantReadWriteLock()
@@ -41,9 +42,6 @@ class ChatWebSocketHandler(
 
     private val connectionLockRead = ReentrantReadWriteLock()
 
-    override fun afterConnectionClosed(session: WebSocketSession?, status: CloseStatus?) {
-        super.afterConnectionClosed(session, status)
-    }
 
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
@@ -212,4 +210,156 @@ class ChatWebSocketHandler(
         val session: WebSocketSession,
     )
 
+}
+*/
+
+@Component
+class ChatWebSocketHandler(
+    private val chatMessageService: ChatMessageService, // Service pour sauvegarder les messages en DB
+    private val objectMapper: ObjectMapper,             // Pour transformer le JSON en objets Kotlin
+    private val chatService: ChatService,               // Pour vérifier à quels chats appartient l'user
+    private val jWTService: JWTService,                 // Pour identifier l'user via son token
+) : TextWebSocketHandler() { // TextWebSocketHandler = spécialisé dans l'envoi/réception de texte (JSON)
+
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    // Verrou pour éviter que deux fils (threads) ne modifient les listes en même temps
+    private val connectionLockRead = ReentrantReadWriteLock()
+
+    // --- NOS REGISTRES (STOCKED EN RAM) ---
+    // Associe un ID de session (ex: "abc-123") à une session complète
+    private val sessions = ConcurrentHashMap<String, UserSession>()
+    // Associe un User à ses sessions (un user peut avoir plusieurs téléphones connectés)
+    private val userToSessions = ConcurrentHashMap<UserId, MutableSet<String>>()
+    // Cache : Liste des IDs de chats auxquels appartient un utilisateur
+    private val userChatIds = ConcurrentHashMap<UserId, MutableSet<ChatId>>()
+    // La liste des sessions actives pour CHAQUE chat (Crucial pour le broadcast)
+    private val chatToSessions = ConcurrentHashMap<ChatId, MutableSet<String>>()
+
+    // ÉTAPE 1 : QUAND UN UTILISATEUR SE CONNECTE
+    override fun afterConnectionEstablished(session: WebSocketSession) {
+        // 1. On cherche le Token dans les headers de la poignée de main (handshake)
+        val authHeader = session.handshakeHeaders.getFirst(HttpHeaders.AUTHORIZATION)
+            ?: run {
+                logger.warn("Session ${session.id} fermée : Pas de Token")
+                session.close(CloseStatus.SERVER_ERROR.withReason("Authentication failed"))
+                return
+            }
+
+        // 2. On récupère le UserId via le Token
+        val userId = jWTService.getUserIdFromToken(authHeader)
+        val userSession = UserSession(userId = userId, session = session)
+
+        // 3. MISE À JOUR DU REGISTRE (On verrouille l'écriture pour être tranquille)
+        connectionLockRead.write {
+            // On enregistre la session globale
+            sessions[session.id] = userSession
+
+            // On lie l'utilisateur à cette nouvelle session
+            userToSessions.compute(userId) { _, existingSessions ->
+                (existingSessions ?: mutableSetOf()).apply { add(session.id) }
+            }
+
+            // On récupère ses chats (en DB) s'ils ne sont pas déjà en cache
+            val chatIds = userChatIds.computeIfAbsent(userId) {
+                val idsFromDb = chatService.findChatsByUser(userId).map { it.id }
+                ConcurrentHashMap.newKeySet<ChatId>().apply { addAll(idsFromDb) }
+            }
+
+            // Pour chaque chat, on dit : "Cette session écoute ce qui se passe ici"
+            chatIds.forEach { chatId ->
+                chatToSessions.compute(chatId) { _, sessions ->
+                    (sessions ?: mutableSetOf()).apply { add(session.id) }
+                }
+            }
+        }
+        logger.info("Connexion WebSocket établie pour l'user $userId")
+    }
+
+    // ÉTAPE 2 : QUAND LE SERVEUR REÇOIT UN MESSAGE DE L'UTILISATEUR
+    override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
+        // On récupère l'identité de celui qui parle
+        val userSession = connectionLockRead.read { sessions[session.id] ?: return }
+
+        try {
+            // On décode le "paquet" reçu
+            val webSocketMessage = objectMapper.readValue(message.payload, IncomingWebSocketMessage::class.java)
+
+            // Si le type est "NOUVEAU_MESSAGE"
+            when (webSocketMessage.type) {
+                IncomingWebSocketMessageType.NEW_MESSAGE -> {
+                    val dto = objectMapper.readValue(webSocketMessage.payload, SendMessageDto::class.java)
+                    handlerSendMessage(dto = dto, senderId = userSession.userId)
+                }
+            }
+        } catch (e: JsonMappingException) {
+            sendError(userSession.session, ErrorDto("INVALID_JSON", "Format JSON invalide"))
+        }
+    }
+
+    // ÉTAPE 3 : TRAITEMENT DE L'ENVOI D'UN MESSAGE
+    private fun handlerSendMessage(dto: SendMessageDto, senderId: UserId) {
+        // Sécurité : On vérifie que l'user fait bien partie du chat
+        val userChats = connectionLockRead.read { userChatIds[senderId] } ?: return
+        if (dto.chatId !in userChats) return
+
+        // On sauvegarde le message en Base de Données (Postgres)
+        val savedMessage = chatMessageService.sendMessage(
+            chatId = dto.chatId,
+            senderId = senderId,
+            content = dto.content,
+            messageId = dto.messageId
+        )
+
+        // On envoie le message à TOUS les gens connectés dans ce chat
+        broadcastToChat(
+            chatId = dto.chatId,
+            message = OutgoingWebSocketMessage(
+                type = OutgoingWebSocketMessageType.NEW_MESSAGE,
+                payload = objectMapper.writeValueAsString(savedMessage.toChatMessageDto()),
+            )
+        )
+    }
+
+    // ÉTAPE 4 : LE MÉGAPHONE (BROADCAST)
+    private fun broadcastToChat(chatId: ChatId, message: OutgoingWebSocketMessage) {
+        // On récupère la liste de tous les "tuyaux" connectés à ce chat
+        val targetSessions = connectionLockRead.read { chatToSessions[chatId]?.toList() ?: emptyList() }
+
+        targetSessions.forEach { sessionId ->
+            val userSession = connectionLockRead.read { sessions[sessionId] }
+            userSession?.let {
+                // On envoie à l'utilisateur spécifique
+                sendToUser(userId = it.userId, message = message)
+            }
+        }
+    }
+
+    // ÉTAPE 5 : L'ENVOI FINAL SUR LE TUYAU
+    private fun sendToUser(userId: UserId, message: OutgoingWebSocketMessage) {
+        val userSessions = connectionLockRead.read { userToSessions[userId] ?: emptySet() }
+
+        userSessions.forEach { sessionId ->
+            val userSession = connectionLockRead.read { sessions[sessionId] ?: return@forEach }
+
+            // Si le tuyau est toujours ouvert, on pousse le JSON
+            if (userSession.session.isOpen) {
+                try {
+                    val messageJson = objectMapper.writeValueAsString(message)
+                    userSession.session.sendMessage(TextMessage(messageJson))
+                } catch (e: Exception) {
+                    logger.warn("Erreur d'envoi à $userId", e)
+                }
+            }
+        }
+    }
+
+    // Petit outil pour renvoyer une erreur au client en cas de problème
+    private fun sendError(session: WebSocketSession, error: ErrorDto) {
+        val msg = OutgoingWebSocketMessage(OutgoingWebSocketMessageType.ERROR, objectMapper.writeValueAsString(error))
+        session.sendMessage(TextMessage(objectMapper.writeValueAsString(msg)))
+    }
+
+    // Structure interne pour stocker les infos d'une connexion
+    private data class UserSession(val userId: UserId, val session: WebSocketSession)
 }
