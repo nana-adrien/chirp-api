@@ -96,5 +96,5 @@ nginx:
 
 
 supabase:
-  url: "aws-1-eu-central-1.pooler.supabase.com"
+  url: "https://inbgthrrpyghufkikqov.supabase.co"
   service-key: ${SUPERBASE_SERVICE_KEY}

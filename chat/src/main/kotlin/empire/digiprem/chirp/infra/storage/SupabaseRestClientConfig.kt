@@ -15,8 +15,7 @@ class SupabaseRestClientConfig(
     fun supabaseRestClient(): RestClient {
         return RestClient.builder()
             .baseUrl(supabaseUrl)
-            .defaultHeader("Authrization","Bearer $supabaseServicekey")
-            .defaultHeader("Content-Type","Application/json")
+            .defaultHeader("Authorization","Bearer $supabaseServicekey")
             .build()
     }
 
