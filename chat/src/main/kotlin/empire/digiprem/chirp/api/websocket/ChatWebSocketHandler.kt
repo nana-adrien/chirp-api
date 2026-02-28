@@ -11,6 +11,7 @@ import empire.digiprem.chirp.domain.type.UserId
 import empire.digiprem.chirp.service.ChatMessageService
 import empire.digiprem.chirp.service.ChatService
 import empire.digiprem.chirp.service.JWTService
+import empire.digiprem.chirp.domain.event.ProfilePictureUploadEvent
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.scheduling.annotation.Scheduled
@@ -234,7 +235,7 @@ class ChatWebSocketHandler(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     // Verrou pour éviter que deux fils (threads) ne modifient les listes en même temps
-    private val connectionLockRead = ReentrantReadWriteLock()
+    private val connectionLock = ReentrantReadWriteLock()
 
     // --- NOS REGISTRES (STOCKED EN RAM) ---
     // Associe un ID de session (ex: "abc-123") à une session complète
@@ -267,7 +268,7 @@ class ChatWebSocketHandler(
         )
 
         // 3. MISE À JOUR DU REGISTRE (On verrouille l'écriture pour être tranquille)
-        connectionLockRead.write {
+        connectionLock.write {
             // On enregistre la session globale
             sessions[session.id] = userSession
 
@@ -293,18 +294,18 @@ class ChatWebSocketHandler(
     }
 
     override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
-        connectionLockRead.write {
-            sessions.remove(session.id )?.let {userSession ->
-                val userId=userSession.userId
+        connectionLock.write {
+            sessions.remove(session.id)?.let { userSession ->
+                val userId = userSession.userId
 
-                userToSessions.compute(userId){_,sessions->
+                userToSessions.compute(userId) { _, sessions ->
                     sessions
                         ?.apply { remove(session.id) }
                         ?.takeIf { it.isNotEmpty() }
                 }
 
                 userChatIds[userId]?.forEach { chatId ->
-                    chatToSessions.compute(userId){_,sessions->
+                    chatToSessions.compute(userId) { _, sessions ->
                         sessions
                             ?.apply { remove(session.id) }
                             ?.takeIf { it.isNotEmpty() }
@@ -326,7 +327,7 @@ class ChatWebSocketHandler(
     // ÉTAPE 2 : QUAND LE SERVEUR REÇOIT UN MESSAGE DE L'UTILISATEUR
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
         // On récupère l'identité de celui qui parle
-        val userSession = connectionLockRead.read { sessions[session.id] ?: return }
+        val userSession = connectionLock.read { sessions[session.id] ?: return }
 
         try {
             // On décode le "paquet" reçu
@@ -347,7 +348,7 @@ class ChatWebSocketHandler(
     // ÉTAPE 3 : TRAITEMENT DE L'ENVOI D'UN MESSAGE
     private fun handlerSendMessage(dto: SendMessageDto, senderId: UserId) {
         // Sécurité : On vérifie que l'user fait bien partie du chat
-        val userChats = connectionLockRead.read { userChatIds[senderId] } ?: return
+        val userChats = connectionLock.read { userChatIds[senderId] } ?: return
         if (dto.chatId !in userChats) return
 
         // On sauvegarde le message en Base de Données (Postgres)
@@ -371,10 +372,10 @@ class ChatWebSocketHandler(
     // ÉTAPE 4 : LE MÉGAPHONE (BROADCAST)
     private fun broadcastToChat(chatId: ChatId, message: OutgoingWebSocketMessage) {
         // On récupère la liste de tous les "tuyaux" connectés à ce chat
-        val targetSessions = connectionLockRead.read { chatToSessions[chatId]?.toList() ?: emptyList() }
+        val targetSessions = connectionLock.read { chatToSessions[chatId]?.toList() ?: emptyList() }
 
         targetSessions.forEach { sessionId ->
-            val userSession = connectionLockRead.read { sessions[sessionId] }
+            val userSession = connectionLock.read { sessions[sessionId] }
             userSession?.let {
                 // On envoie à l'utilisateur spécifique
                 sendToUser(userId = it.userId, message = message)
@@ -384,10 +385,10 @@ class ChatWebSocketHandler(
 
     // ÉTAPE 5 : L'ENVOI FINAL SUR LE TUYAU
     private fun sendToUser(userId: UserId, message: OutgoingWebSocketMessage) {
-        val userSessions = connectionLockRead.read { userToSessions[userId] ?: emptySet() }
+        val userSessions = connectionLock.read { userToSessions[userId] ?: emptySet() }
 
         userSessions.forEach { sessionId ->
-            val userSession = connectionLockRead.read { sessions[sessionId] ?: return@forEach }
+            val userSession = connectionLock.read { sessions[sessionId] ?: return@forEach }
 
             // Si le tuyau est toujours ouvert, on pousse le JSON
             if (userSession.session.isOpen) {
@@ -419,8 +420,48 @@ class ChatWebSocketHandler(
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    fun onProfilePictureUpload(event: ProfilePictureUploadEvent) {
+        val userChats = connectionLock.read {
+            userChatIds[event.userId]?.toList() ?: emptyList()
+        }
+        val dto = ProfilePictureUploadDto(
+            userId = event.userId,
+            newUrl = event.newUrl,
+        )
+
+        val sessionIds = mutableSetOf<String>()
+        userChats.forEach { chatId ->
+            connectionLock.read {
+                chatToSessions[chatId]?.let { sessions ->
+                    sessions.addAll(sessions)
+                }
+            }
+        }
+
+        val webSocketMessage = OutgoingWebSocketMessage(
+            type = OutgoingWebSocketMessageType.PROFILE_PICTURE_UPDATE,
+            payload = objectMapper.writeValueAsString(dto)
+        )
+        val messageJson = objectMapper.writeValueAsString(webSocketMessage)
+        sessionIds.forEach { sessionId ->
+            val userSession=connectionLock.read {
+                sessions[sessionId]
+            }?:return@forEach
+
+            try {
+                if (userSession.session.isOpen) {
+                    userSession.session.sendMessage(TextMessage(messageJson))
+                }
+            }catch (e: Exception) {
+                logger.error("Could not send profile picture update to session $sessionId", e)
+            }
+        }
+
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onJoinChat(event: ChatParticipantJoinedEvent) {
-        connectionLockRead.write {
+        connectionLock.write {
             event.userIds.forEach { userId ->
                 userChatIds.compute(userId) { _, chatIds ->
                     (chatIds ?: mutableSetOf()).apply { add(event.chatId) }
@@ -449,7 +490,7 @@ class ChatWebSocketHandler(
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onLeftChat(event: ChatParticipantLeftEvent) {
-        connectionLockRead.write {
+        connectionLock.write {
             userChatIds.compute(event.userId) { _, chatIds ->
                 chatIds
                     ?.apply { remove(event.chatId) }
@@ -469,7 +510,7 @@ class ChatWebSocketHandler(
     }
 
     override fun handlePongMessage(session: WebSocketSession, message: PongMessage) {
-        connectionLockRead.write {
+        connectionLock.write {
             sessions.compute(session.id) { _, userSession ->
                 userSession?.copy(
                     lastPongTimestamp = System.currentTimeMillis(),
@@ -484,7 +525,7 @@ class ChatWebSocketHandler(
         val currentTime = System.currentTimeMillis()
         val sessionsToClose = mutableListOf<String>()
 
-        val sessionsSnapshot = connectionLockRead.read { sessions.toMap() }
+        val sessionsSnapshot = connectionLock.read { sessions.toMap() }
 
         sessionsSnapshot.forEach { (sessionId, userSession) ->
             try {
@@ -506,11 +547,11 @@ class ChatWebSocketHandler(
         }
 
         sessionsToClose.forEach { sessionId ->
-            connectionLockRead.read {
+            connectionLock.read {
                 sessions[sessionId]?.session?.let { session ->
                     try {
                         session.close(CloseStatus.GOING_AWAY.withReason("Ping timeout"))
-                    }catch (e: Exception) {
+                    } catch (e: Exception) {
                         logger.error("Could not close sessions  for session ${session.id}")
                     }
                 }
@@ -531,3 +572,4 @@ class ChatWebSocketHandler(
         val lastPongTimestamp: Long = System.currentTimeMillis(),
     )
 }
+
